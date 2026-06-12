@@ -107,17 +107,19 @@ def open_squad_dialog():
     st.caption("Uncheck players who are unavailable (injured/suspended)")
     st.markdown("---")
 
-    col_home, col_away = st.columns(2)
+    squad_container = st.container(height=500)
+    with squad_container:
+        col_home, col_away = st.columns(2)
 
-    with col_home:
-        _render_team_squad_dialog(
-            match_num, home, home_squad, (match_num, home)
-        )
+        with col_home:
+            _render_team_squad_dialog(
+                match_num, home, home_squad, (match_num, home)
+            )
 
-    with col_away:
-        _render_team_squad_dialog(
-            match_num, away, away_squad, (match_num, away)
-        )
+        with col_away:
+            _render_team_squad_dialog(
+                match_num, away, away_squad, (match_num, away)
+            )
 
 
 def _render_team_squad_dialog(

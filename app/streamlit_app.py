@@ -66,6 +66,16 @@ div[data-testid="stExpander"] details summary p { font-size: 0.82rem; }
 div[data-testid="stExpander"] .stCheckbox label p { font-size: 0.78rem; margin: 0; }
 div[data-testid="stExpander"] .stCheckbox { margin-bottom: -8px; }
 
+/* Scrollable standings panel */
+.standings-scroll {
+    max-height: 75vh;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Scrollable squad dialog */
+div[data-testid="stDialog"] > div { max-height: 80vh; overflow-y: auto; }
+
 .pred-card {
     border: 1px solid #D6EAF8; border-radius: 10px; padding: 12px;
     margin: 6px 0; background: #FAFCFE;
@@ -215,21 +225,23 @@ def render_group_stage(group_df, date_range, selected_teams):
 
     with standings_col:
         st.markdown('<div class="section-title">Standings</div>', unsafe_allow_html=True)
-        if st.session_state.match_results:
-            standings = compute_standings(group_df, st.session_state.match_results)
-            qualified = get_qualified_teams(standings)
-            for group in GROUP_NAMES:
-                with st.expander(group, expanded=False):
-                    render_standings_table(standings, group, qualified)
-            st.markdown(f"*{len(st.session_state.match_results)} match(es) recorded*")
-        else:
-            st.caption("Enter match scores to see standings update live.")
-            for group in GROUP_NAMES:
-                teams = get_group_teams(group_df).get(group, [])
-                chips = " ".join(
-                    f'<span class="group-chip">{flag_img(t, 14)} {t}</span>' for t in teams
-                )
-                st.markdown(f'**{group}:** {chips}', unsafe_allow_html=True)
+        standings_container = st.container(height=600)
+        with standings_container:
+            if st.session_state.match_results:
+                standings = compute_standings(group_df, st.session_state.match_results)
+                qualified = get_qualified_teams(standings)
+                for group in GROUP_NAMES:
+                    with st.expander(group, expanded=False):
+                        render_standings_table(standings, group, qualified)
+                st.markdown(f"*{len(st.session_state.match_results)} match(es) recorded*")
+            else:
+                st.caption("Enter match scores to see standings update live.")
+                for group in GROUP_NAMES:
+                    teams = get_group_teams(group_df).get(group, [])
+                    chips = " ".join(
+                        f'<span class="group-chip">{flag_img(t, 14)} {t}</span>' for t in teams
+                    )
+                    st.markdown(f'**{group}:** {chips}', unsafe_allow_html=True)
 
 
 def render_knockout_stage(group_df, knockout_df, date_range):
