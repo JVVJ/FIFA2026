@@ -1,0 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Large data files (download via instructions in README)
+data/raw/international_results.csv
+data/model.pkl
+
+# User data (generated at runtime)
+data/match_results.json
+data/unavailable_players.json
