@@ -143,7 +143,9 @@ def _render_match_card(mn: int, ko_results: dict, show_predictions: bool, editab
         pct_h = f'<span style="font-size:0.6rem;color:#85929E;">{pred["p_home_win"]*100:.0f}%</span>'
         pct_a = f'<span style="font-size:0.6rem;color:#85929E;">{pred["p_away_win"]*100:.0f}%</span>'
 
-    st.markdown(f"""<div style="border:1px solid #D6EAF8;border-radius:8px;padding:6px 8px;margin:4px 0;background:white;font-size:0.78rem;">
+    if not editable:
+        # Read-only display (predictions tab)
+        st.markdown(f"""<div style="border:1px solid #D6EAF8;border-radius:8px;padding:6px 8px;margin:4px 0;background:white;font-size:0.78rem;">
 <div style="display:flex;align-items:center;gap:4px;padding:3px 4px;border-radius:3px;{h_bg}">
     {hf}<span style="{h_style}">{home}</span>
     <span style="margin-left:auto;font-weight:700;">{h_score}</span>{pct_h}
@@ -153,34 +155,48 @@ def _render_match_card(mn: int, ko_results: dict, show_predictions: bool, editab
     <span style="margin-left:auto;font-weight:700;">{a_score}</span>{pct_a}
 </div>
 </div>""", unsafe_allow_html=True)
-
-    # Editable score entry + squad button
-    if editable:
-        c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
-        with c1:
+    else:
+        # Editable: team name + score input on same row
+        st.markdown(
+            f'<div style="border:1px solid #D6EAF8;border-radius:8px;'
+            f'padding:4px 8px;margin:4px 0;background:white;font-size:0.78rem;">'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        # Home team row: flag + name + score input
+        h1, h2 = st.columns([3, 1])
+        with h1:
+            st.markdown(f'{hf} <span style="{h_style}">{home}</span>', unsafe_allow_html=True)
+        with h2:
             hg = st.number_input(
                 "H", min_value=0, max_value=20,
                 value=actual["home_goals"] if actual else 0,
                 key=f"bkt_hg_{mn}", label_visibility="collapsed",
             )
-        with c2:
+        # Away team row: flag + name + score input
+        a1, a2 = st.columns([3, 1])
+        with a1:
+            st.markdown(f'{af} <span style="{a_style}">{away}</span>', unsafe_allow_html=True)
+        with a2:
             ag = st.number_input(
                 "A", min_value=0, max_value=20,
                 value=actual["away_goals"] if actual else 0,
                 key=f"bkt_ag_{mn}", label_visibility="collapsed",
             )
-        with c3:
-            if st.button("✓", key=f"bkt_save_{mn}", type="primary"):
+        # Save + Squad buttons
+        b1, b2 = st.columns(2)
+        with b1:
+            if st.button("✓ Save", key=f"bkt_save_{mn}", type="primary", use_container_width=True):
                 from app.data import save_match_result
                 save_match_result(mn, home, away, hg, ag)
                 st.rerun()
-        with c4:
+        with b2:
             from app.components import open_squad_dialog
             home_unavail = st.session_state.unavailable.get((mn, home), set())
             away_unavail = st.session_state.unavailable.get((mn, away), set())
             unavail_n = len(home_unavail) + len(away_unavail)
-            sq_label = f"📋{unavail_n}" if unavail_n else "📋"
-            if st.button(sq_label, key=f"bkt_sq_{mn}"):
+            sq_label = f"📋 {unavail_n}" if unavail_n else "📋"
+            if st.button(sq_label, key=f"bkt_sq_{mn}", use_container_width=True):
                 st.session_state["_squad_dialog_match"] = mn
                 st.session_state["_squad_dialog_home"] = home
                 st.session_state["_squad_dialog_away"] = away
@@ -230,31 +246,37 @@ def _render_final_card(mn: int, ko_results: dict, show_predictions: bool, editab
 </div>""", unsafe_allow_html=True)
 
     if editable:
-        c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
-        with c1:
+        h1, h2 = st.columns([3, 1])
+        with h1:
+            st.markdown(f'{hf} **{home}**', unsafe_allow_html=True)
+        with h2:
             hg = st.number_input(
                 "H", min_value=0, max_value=20,
                 value=actual["home_goals"] if actual else 0,
                 key=f"bkt_hg_{mn}", label_visibility="collapsed",
             )
-        with c2:
+        a1, a2 = st.columns([3, 1])
+        with a1:
+            st.markdown(f'{af} **{away}**', unsafe_allow_html=True)
+        with a2:
             ag = st.number_input(
                 "A", min_value=0, max_value=20,
                 value=actual["away_goals"] if actual else 0,
                 key=f"bkt_ag_{mn}", label_visibility="collapsed",
             )
-        with c3:
-            if st.button("✓", key=f"bkt_save_{mn}", type="primary"):
+        b1, b2 = st.columns(2)
+        with b1:
+            if st.button("✓ Save", key=f"bkt_save_{mn}", type="primary", use_container_width=True):
                 from app.data import save_match_result
                 save_match_result(mn, home, away, hg, ag)
                 st.rerun()
-        with c4:
+        with b2:
             from app.components import open_squad_dialog
             home_unavail = st.session_state.unavailable.get((mn, home), set())
             away_unavail = st.session_state.unavailable.get((mn, away), set())
             unavail_n = len(home_unavail) + len(away_unavail)
-            sq_label = f"📋{unavail_n}" if unavail_n else "📋"
-            if st.button(sq_label, key=f"bkt_sq_{mn}"):
+            sq_label = f"📋 {unavail_n}" if unavail_n else "📋"
+            if st.button(sq_label, key=f"bkt_sq_{mn}", use_container_width=True):
                 st.session_state["_squad_dialog_match"] = mn
                 st.session_state["_squad_dialog_home"] = home
                 st.session_state["_squad_dialog_away"] = away
