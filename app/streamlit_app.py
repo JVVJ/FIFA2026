@@ -91,6 +91,26 @@ div[data-testid="stExpander"] .stCheckbox { margin-bottom: -8px; }
 </style>""", unsafe_allow_html=True)
 
 
+def _retrain_model():
+    """Run the full training pipeline and reload the model."""
+    import subprocess
+    with st.spinner("Retraining model (ensemble + Dixon-Coles)... ~90 seconds"):
+        result = subprocess.run(
+            ["uv", "run", "python", "src/models/train.py"],
+            capture_output=True, text=True, timeout=300,
+        )
+        if result.returncode == 0:
+            # Clear cached model so it reloads from the new pkl
+            if "_model_state" in st.session_state:
+                del st.session_state["_model_state"]
+            st.success("Model retrained successfully!")
+            st.code(result.stdout[-500:] if len(result.stdout) > 500 else result.stdout)
+            st.rerun()
+        else:
+            st.error("Training failed!")
+            st.code(result.stderr[-500:] if len(result.stderr) > 500 else result.stderr)
+
+
 def main():
     init_results()
 
@@ -135,6 +155,10 @@ def main():
             set(df["Home_Team"].to_list() + df["Away_Team"].to_list())
         )
         selected_teams = st.multiselect("Team", all_teams)
+
+        st.markdown("---")
+        if st.button("🔄 Retrain Model", use_container_width=True):
+            _retrain_model()
 
     group_df = df.filter(pl.col("Group_Stage").str.starts_with("Group"))
     knockout_df = df.filter(~pl.col("Group_Stage").str.starts_with("Group"))

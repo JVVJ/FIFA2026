@@ -75,6 +75,7 @@ Open http://localhost:3000 in your browser.
 - Sidebar button navigation (active page highlighted)
 - All scores and squad data persist to JSON files on disk
 - Data survives page refreshes, browser closes, server restarts
+- **🔄 Retrain Model** button in sidebar — runs the full training pipeline (~90s) to refit ensemble + Dixon-Coles with latest data
 
 ---
 
@@ -223,3 +224,5 @@ On app restart:
 8. Predictions reflect full history + your tournament data seamlessly
 
 **Effect:** A team that beats a strong opponent sees their Elo jump (K=60 is the highest weight), their form improves, and their H2H record updates — all feeding directly into the next prediction's Layer 1 features.
+
+**Full retrain (optional):** Click "🔄 Retrain Model" in the sidebar to refit the Dixon-Coles parameters and ensemble weights from scratch with all available data. This takes ~90 seconds and produces a new `model.pkl`.
