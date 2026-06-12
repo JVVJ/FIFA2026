@@ -120,7 +120,7 @@ def _render_match_card(mn: int, ko_results: dict, show_predictions: bool, editab
         elif actual["away_goals"] > actual["home_goals"]:
             a_bg = "background:#D5F5E3;"
             a_style = "font-weight:700;color:#1B4F72;"
-    elif winner != "TBD":
+    elif pred and winner != "TBD":
         if winner == home:
             h_bg = "background:#D5F5E3;"
         else:

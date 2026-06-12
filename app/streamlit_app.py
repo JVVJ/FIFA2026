@@ -236,22 +236,45 @@ def render_knockout_stage(group_df, knockout_df, date_range):
     from app.bracket import render_bracket_tree
     from app.predictions import load_model, simulate_tournament
 
+    # Build ko_results with ONLY user-entered data (no predictions)
+    # Use simulation only to resolve team names (who plays who)
     model_state = load_model()
+    ko_results = {}
 
     if model_state:
         sim = simulate_tournament(group_df, knockout_df, model_state)
-        ko_results = sim["ko_results"]
+        # Take team assignments from simulation but clear predicted scores
+        for mn, kr in sim["ko_results"].items():
+            actual = st.session_state.match_results.get(mn)
+            if actual:
+                # User entered a real score — determine winner from that
+                home = kr.get("winner", "TBD")
+                away = kr.get("loser", "TBD")
+                if kr.get("pred") and kr["pred"]["p_home_win"] < kr["pred"]["p_away_win"]:
+                    home, away = away, home
+                if actual["home_goals"] > actual["away_goals"]:
+                    ko_results[mn] = {"winner": home, "loser": away, "pred": None}
+                elif actual["away_goals"] > actual["home_goals"]:
+                    ko_results[mn] = {"winner": away, "loser": home, "pred": None}
+                else:
+                    ko_results[mn] = {"winner": home, "loser": away, "pred": None}
+            else:
+                # No user score — show teams but no predicted winner/score
+                ko_results[mn] = {
+                    "winner": kr.get("winner", "TBD"),
+                    "loser": kr.get("loser", "TBD"),
+                    "pred": None,
+                }
     elif st.session_state.match_results:
         standings = compute_standings(group_df, st.session_state.match_results)
         qualified = get_qualified_teams(standings)
-        ko_results = {}
         for row in knockout_df.iter_rows(named=True):
             mn = row["Match_Number"]
             home = resolve_knockout_team(row["Home_Team"], qualified)
             away = resolve_knockout_team(row["Away_Team"], qualified)
-            result = st.session_state.match_results.get(mn)
-            if result:
-                if result["home_goals"] > result["away_goals"]:
+            actual = st.session_state.match_results.get(mn)
+            if actual:
+                if actual["home_goals"] > actual["away_goals"]:
                     ko_results[mn] = {"winner": home, "loser": away, "pred": None}
                 else:
                     ko_results[mn] = {"winner": away, "loser": home, "pred": None}
@@ -261,7 +284,7 @@ def render_knockout_stage(group_df, knockout_df, date_range):
         st.info("Enter group stage scores or train the model to see the bracket.")
         return
 
-    # Bracket with inline score entry
+    # Bracket with inline score entry — no predictions shown
     render_bracket_tree(ko_results, show_predictions=False, editable=True)
 
 
