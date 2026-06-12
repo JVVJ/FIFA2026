@@ -8,25 +8,15 @@ from app.config import flag_img
 def render_bracket_tree(ko_results: dict, show_predictions: bool = False, editable: bool = False):
     """Render the full knockout bracket."""
 
-    # R32
-    st.markdown(
-        '<div style="font-size:0.95rem;font-weight:600;color:#1B4F72;'
-        'margin:0.5rem 0;padding-bottom:4px;border-bottom:2px solid #D6EAF8;">'
-        'Round of 32</div>',
-        unsafe_allow_html=True,
-    )
+    # R32 (in expander to reduce widget count)
     r32 = [73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88]
-    _render_round_grid(r32, ko_results, show_predictions, editable, cols=4)
+    with st.expander("Round of 32 (16 matches)", expanded=False):
+        _render_round_grid(r32, ko_results, show_predictions, editable, cols=4)
 
-    # R16
-    st.markdown(
-        '<div style="font-size:0.95rem;font-weight:600;color:#1B4F72;'
-        'margin:0.5rem 0;padding-bottom:4px;border-bottom:2px solid #D6EAF8;">'
-        'Round of 16</div>',
-        unsafe_allow_html=True,
-    )
+    # R16 (in expander)
     r16 = [89, 90, 91, 92, 93, 94, 95, 96]
-    _render_round_grid(r16, ko_results, show_predictions, editable, cols=4)
+    with st.expander("Round of 16 (8 matches)", expanded=False):
+        _render_round_grid(r16, ko_results, show_predictions, editable, cols=4)
 
     # QF → SF → Final (converging bracket)
     st.markdown(
