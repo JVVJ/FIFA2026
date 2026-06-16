@@ -188,6 +188,8 @@ def run_monte_carlo(
 
 def render_monte_carlo(group_df: pl.DataFrame, knockout_df: pl.DataFrame):
     """Render Monte Carlo simulation results."""
+    import time
+
     st.markdown("## 🎲 Monte Carlo Simulation")
 
     model_state = load_model()
@@ -197,7 +199,7 @@ def render_monte_carlo(group_df: pl.DataFrame, knockout_df: pl.DataFrame):
 
     st.caption(
         "Simulates the tournament thousands of times, sampling outcomes "
-        "probabilistically. Shows the probability of each team reaching each stage."
+        "probabilistically. Uses actual scores you've entered as fixed outcomes."
     )
 
     n_sims = st.select_slider(
@@ -207,20 +209,44 @@ def render_monte_carlo(group_df: pl.DataFrame, knockout_df: pl.DataFrame):
         key="mc_n_sims",
     )
 
-    if st.button("Run Simulation", type="primary", key="mc_run"):
-        progress = st.progress(0, text=f"Running {n_sims:,} simulations...")
-        results = run_monte_carlo(group_df, knockout_df, model_state, n_sims, progress_bar=progress)
-        progress.empty()
+    # Show how many actual results are being used
+    actual_count = len(st.session_state.get("match_results", {}))
+    if actual_count > 0:
+        st.markdown(
+            f'<div style="font-size:0.8rem;color:#27AE60;margin-bottom:8px;">'
+            f'✓ Using {actual_count} actual result(s) as fixed outcomes in simulation</div>',
+            unsafe_allow_html=True,
+        )
+
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        run_btn = st.button("▶ Run Simulation", type="primary", key="mc_run", use_container_width=True)
+
+    # Handle async simulation
+    if run_btn:
+        st.session_state["mc_running"] = True
+        st.session_state["mc_start_time"] = time.time()
+        # Run in a fragment with spinner (Streamlit handles the blocking)
+        with st.spinner(f"Running {n_sims:,} simulations... (this runs in the background)"):
+            results = run_monte_carlo(
+                group_df, knockout_df, model_state, n_sims
+            )
+        elapsed = time.time() - st.session_state["mc_start_time"]
         st.session_state["mc_results"] = results
         st.session_state["mc_n"] = n_sims
+        st.session_state["mc_running"] = False
+        st.session_state["mc_elapsed"] = elapsed
+        st.toast(f"✅ Monte Carlo complete! ({n_sims:,} sims in {elapsed:.1f}s)", icon="🎲")
         st.rerun()
 
     if "mc_results" not in st.session_state:
-        st.info("Click 'Run Simulation' to start.")
+        st.info("Click 'Run Simulation' to start. The simulation uses your entered scores as fixed results and only samples unplayed matches.")
         return
 
     results = st.session_state["mc_results"]
     n = st.session_state["mc_n"]
+    elapsed = st.session_state.get("mc_elapsed", 0)
+    st.success(f"✅ Completed {n:,} simulations in {elapsed:.1f}s")
 
     # Build results table
     rows = []
