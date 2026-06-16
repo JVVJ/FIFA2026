@@ -141,6 +141,7 @@ def main():
             ("🏆 Knockout Stage", "nav_ko"),
             ("🔮 Predictions (Groups)", "nav_pg"),
             ("🔮 Predictions (Knockout)", "nav_pk"),
+            ("🎲 Monte Carlo", "nav_mc"),
             ("📊 Methodology", "nav_method"),
         ]
         for label, key in nav_items:
@@ -181,6 +182,9 @@ def main():
         render_predictions_groups(group_df)
     elif page == "🔮 Predictions (Knockout)":
         render_predictions_knockout(group_df, knockout_df)
+    elif page == "🎲 Monte Carlo":
+        from app.montecarlo import render_monte_carlo
+        render_monte_carlo(group_df, knockout_df)
     elif page == "📊 Methodology":
         from app.methodology import render_methodology
         render_methodology()
